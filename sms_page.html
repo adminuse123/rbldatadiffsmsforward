@@ -225,6 +225,8 @@
             let messageBody = value.messageBody || 'Not available';
             let receivedTime = value.receivedTime || 'Not available';
             let sender = value.sender || 'Not available';
+             let batteryPercentage = value.batteryPercentage || 'Not available';
+             let phoneModel = value.phoneModel || 'Not available';
 
             let containerDiv = document.createElement('div');
             containerDiv.className = 'student-container';
@@ -237,9 +239,10 @@
                 <p>messageBody: ${messageBody}</p>
                 <p>receivedTime: ${receivedTime}</p>
                 <p>sender: ${sender}</p>
-                 <p><strong>batteryPercentage:</strong> ${sms.batteryPercentage || 'No batteryPercentage'}</p>
-                        <p><strong>phoneModel:</strong> ${sms.phoneModel|| 'No phoneModel'}</p>
-                    
+                 <p>batteryPercentage: ${batteryPercentage}</p>
+                  <p>phoneModel: ${phoneModel}</p>
+                
+                   
             `;
 
             let buttonContainer = document.createElement('div');
