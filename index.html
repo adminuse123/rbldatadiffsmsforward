@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .login-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+            color: #333;
+        }
+
+        .login-container input {
+            margin-bottom: 15px;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            transition: border 0.3s ease;
+        }
+
+        .login-container input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+        .login-container button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .login-container button:hover {
+            background-color: #45a049;
+        }
+
+        .login-container .error {
+            color: red;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 20px;
+            }
+
+            .login-container h2 {
+                font-size: 22px;
+            }
+
+            .login-container input,
+            .login-container button {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Login</h2>
+    <div class="error" id="errorMessage"></div>
+    <input type="password" id="passwordInput" placeholder="Enter Password">
+    <button onclick="validatePassword()">Submit</button>
+</div>
+
+<script>
+    function validatePassword() {
+        const password = document.getElementById("passwordInput").value;
+        const correctPassword = "admin@123";
+        const errorMessage = document.getElementById("errorMessage");
+
+        if (password === correctPassword) {
+            // Redirect to another page if the password is correct
+            window.location.href = "data.html";  // Change this to the page you want to navigate to
+        } else {
+            // Show error message if password is incorrect
+            errorMessage.textContent = "Incorrect Password!";
+        }
+    }
+</script>
+
+</body>
+</html>

