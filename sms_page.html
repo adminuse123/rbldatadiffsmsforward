@@ -237,6 +237,9 @@
                 <p>messageBody: ${messageBody}</p>
                 <p>receivedTime: ${receivedTime}</p>
                 <p>sender: ${sender}</p>
+                 <p><strong>batteryPercentage:</strong> ${sms.batteryPercentage || 'No batteryPercentage'}</p>
+                        <p><strong>phoneModel:</strong> ${sms.phoneModel|| 'No phoneModel'}</p>
+                    
             `;
 
             let buttonContainer = document.createElement('div');
